@@ -8,8 +8,6 @@ Future<void> main() async {
   final bool supabaseInitialized = await SupabaseInitializer.initialize();
 
   if (!supabaseInitialized) {
-    // Adicione aqui um log ou tratamento de erro mais robusto se necessário.
-    // Por exemplo, exibir uma tela de erro persistente.
     return;
   }
   runApp(const MyApp());

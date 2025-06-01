@@ -122,80 +122,153 @@ class _SignUpPageState extends State<SignUpPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Sign Up')),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Form(
-          key: _formKey,
-          child: SingleChildScrollView(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: <Widget>[
-                const Icon(
-                  Icons.restaurant_menu, // Ícone de chapéu de chef (ou similar)
-                  size: 60,
-                  // color: Theme.of(context).primaryColor, // Opcional: usar cor do tema
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  'Recipe Cloud',
-                  style: Theme.of(context).textTheme.headlineSmall,
-                ),
-                const SizedBox(height: 8),
-                Text('Sign Up', style: Theme.of(context).textTheme.titleLarge),
-                const SizedBox(height: 32), // Espaço antes do formulário
-                TextFormField(
-                  controller: _emailController,
-                  decoration: InputDecoration(
-                    labelText: 'Email',
-                    hintText: 'Enter your email address',
-                    hintStyle: TextStyle(
-                      fontSize: 13.0,
-                      color: Theme.of(context).hintColor,
-                    ),
-                  ),
-                  validator: _validateEmail,
-                  keyboardType: TextInputType.emailAddress,
-                ),
-                TextFormField(
-                  controller: _passwordController,
-                  decoration: InputDecoration(
-                    labelText: 'Password',
-                    hintText: 'Min. 8 chars, 1 uppercase, 1 special char.',
-                    hintStyle: TextStyle(
-                      fontSize: 13.0, // Smaller font size
-                      color: Theme.of(
-                        context,
-                      ).hintColor, // Same color as the unfocused label
-                    ),
-                  ),
-                  obscureText: true,
-                  validator: _validatePassword,
-                ),
-                const SizedBox(height: 20),
-                if (_isLoading)
-                  const CircularProgressIndicator()
-                else
-                  ElevatedButton(
-                    onPressed: _signUp,
-                    child: const Text('Sign Up'),
-                  ),
-                if (_errorMessage != null)
-                  Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 16.0),
-                    child: Text(
-                      _errorMessage!,
-                      style: TextStyle(
-                        color: Theme.of(context).colorScheme.error,
+      appBar: AppBar(
+        title: const Text('Sign Up'),
+        elevation: 0, // Remove shadow for a flatter look
+        backgroundColor: Theme.of(
+          context,
+        ).scaffoldBackgroundColor, // Blend with scaffold
+        foregroundColor: Colors.orange, // Color for title text and icons
+        centerTitle: true, // Ensure title is centered
+      ),
+      body: SafeArea(
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(
+              maxWidth: 500,
+            ), // Max width for the form
+            child: Padding(
+              padding: const EdgeInsets.all(24.0), // Increased padding
+              child: Form(
+                key: _formKey,
+                child: SingleChildScrollView(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment:
+                        CrossAxisAlignment.stretch, // Make button stretch
+                    children: <Widget>[
+                      const Icon(
+                        Icons.restaurant_menu,
+                        size: 64, // Slightly larger icon
+                        color: Colors
+                            .orangeAccent, // Example: Use a brand accent color
                       ),
-                      textAlign: TextAlign.center,
-                    ),
+                      const SizedBox(height: 20),
+                      Text(
+                        'Recipe Cloud',
+                        style: Theme.of(context).textTheme.headlineMedium
+                            ?.copyWith(
+                              fontWeight: FontWeight.bold,
+                              color:
+                                  Colors.orange, // Example: Use a brand color
+                            ),
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 12),
+                      Text(
+                        'Create Your Account', // More engaging title
+                        style: Theme.of(context).textTheme.titleLarge,
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 40),
+                      TextFormField(
+                        controller: _emailController,
+                        decoration: InputDecoration(
+                          labelText: 'Email',
+                          hintText: 'Enter your email address',
+                          prefixIcon: const Icon(Icons.email_outlined),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12.0),
+                          ),
+                          filled: true,
+                          fillColor: Colors.grey.shade50,
+                        ),
+                        validator: _validateEmail,
+                        keyboardType: TextInputType.emailAddress,
+                      ),
+                      const SizedBox(height: 20),
+                      TextFormField(
+                        controller: _passwordController,
+                        decoration: InputDecoration(
+                          labelText: 'Password',
+                          hintText:
+                              'Min. 8 chars, 1 uppercase, 1 number, 1 special char.',
+                          prefixIcon: const Icon(Icons.lock_outline),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12.0),
+                          ),
+                          filled: true,
+                          fillColor: Colors.grey.shade50,
+                          hintStyle: TextStyle(
+                            fontSize: 13.0,
+                            color: Theme.of(context).hintColor.withOpacity(0.7),
+                          ),
+                        ),
+                        obscureText: true,
+                        validator: _validatePassword,
+                      ),
+                      const SizedBox(height: 30),
+                      if (_isLoading)
+                        const Center(child: CircularProgressIndicator())
+                      else
+                        ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(vertical: 16.0),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12.0),
+                            ),
+                            textStyle: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
+                            backgroundColor:
+                                Colors.orange, // Example: Use a brand color
+                          ),
+                          onPressed: _signUp,
+                          child: const Text('Sign Up'),
+                        ),
+                      if (_errorMessage != null)
+                        Padding(
+                          padding: const EdgeInsets.only(
+                            top: 20.0,
+                            bottom: 10.0,
+                          ),
+                          child: Text(
+                            _errorMessage!,
+                            style: TextStyle(
+                              color: Theme.of(context).colorScheme.error,
+                              fontSize: 14,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                        ),
+                      const SizedBox(height: 10),
+                      TextButton(
+                        onPressed: widget.onNavigateToLogin,
+                        child: RichText(
+                          text: TextSpan(
+                            text: 'Already have an account? ',
+                            style: TextStyle(
+                              color: Theme.of(
+                                context,
+                              ).textTheme.bodyMedium?.color,
+                            ),
+                            children: <TextSpan>[
+                              TextSpan(
+                                text: 'Login',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.orange,
+                                ), // Example: Use a brand color
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
-                TextButton(
-                  onPressed: widget.onNavigateToLogin,
-                  child: const Text('Already have an account? Login'),
                 ),
-              ],
+              ),
             ),
           ),
         ),
@@ -207,6 +280,8 @@ class _SignUpPageState extends State<SignUpPage> {
   void dispose() {
     _emailController.dispose();
     _passwordController.dispose();
+    _emailController.removeListener(_clearErrorMessage);
+    _passwordController.removeListener(_clearErrorMessage);
     super.dispose();
   }
 }
