@@ -1,10 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:recipe_cloud_app/core/services/auth_service.dart';
 import 'package:recipe_cloud_app/core/services/recipe_service.dart';
 
 class HomePage extends StatefulWidget {
   final RecipeService recipeService;
+  final AuthService authService;
 
-  const HomePage({super.key, required this.recipeService});
+  const HomePage({
+    super.key,
+    required this.recipeService,
+    required this.authService,
+  });
 
   @override
   State<HomePage> createState() => _HomePageState();
@@ -31,6 +37,12 @@ class _HomePageState extends State<HomePage> {
             Text('Cloud Recipes'),
           ],
         ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.logout),
+            onPressed: () async => await widget.authService.signOut(),
+          ),
+        ],
       ),
       body: FutureBuilder<List<Map<String, dynamic>>>(
         future: _futureRecipes,
