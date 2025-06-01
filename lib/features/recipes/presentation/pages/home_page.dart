@@ -45,10 +45,7 @@ class _HomePageState extends State<HomePage> {
               final recipe = recipes[index];
               // Exemplo: Exibindo o nome da receita. Adapte conforme sua estrutura de dados.
               return ListTile(
-                title: Text(
-                  recipe['name'] ?? 'Receita sem nome',
-                  style: const TextStyle(color: Colors.black),
-                ),
+                title: Text(recipe['name'] ?? 'Receita sem nome'),
               );
             }),
           );
