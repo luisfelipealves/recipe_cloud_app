@@ -102,6 +102,19 @@ class _LoginPageState extends State<LoginPage> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: <Widget>[
+                const Icon(
+                  Icons.restaurant_menu, // Ícone de chapéu de chef (ou similar)
+                  size: 60,
+                  // color: Theme.of(context).primaryColor, // Opcional: usar cor do tema
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  'Recipe Cloud',
+                  style: Theme.of(context).textTheme.headlineSmall,
+                ),
+                const SizedBox(height: 8),
+                Text('Login', style: Theme.of(context).textTheme.titleLarge),
+                const SizedBox(height: 32), // Espaço antes do formulário
                 TextFormField(
                   controller: _emailController,
                   decoration: const InputDecoration(labelText: 'Email'),
@@ -113,8 +126,9 @@ class _LoginPageState extends State<LoginPage> {
                   controller: _passwordController,
                   decoration: const InputDecoration(labelText: 'Password'),
                   obscureText: true,
-                  validator: (value) =>
-                      value == null || value.isEmpty ? 'Enter password' : null,
+                  validator: (value) => value == null || value.isEmpty
+                      ? 'Enter password' // Mantém a validação simples de não vazio
+                      : null,
                 ),
                 const SizedBox(height: 20),
                 if (_isLoading)

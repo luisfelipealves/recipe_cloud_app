@@ -39,6 +39,22 @@ class _SignUpPageState extends State<SignUpPage> {
     }
   }
 
+  String? _validatePassword(String? value) {
+    if (value == null || value.isEmpty) {
+      return 'Enter password';
+    }
+    if (value.length < 8) {
+      return 'Password must be at least 8 characters long.';
+    }
+    if (!value.contains(RegExp(r'[A-Z]'))) {
+      return 'Password must contain an uppercase letter.';
+    }
+    if (!value.contains(RegExp(r'[!@#$%^&*(),.?":{}|<>]'))) {
+      return 'Password must contain a special character.';
+    }
+    return null;
+  }
+
   Future<void> _signUp() async {
     if (_formKey.currentState!.validate()) {
       setState(() {
@@ -110,19 +126,47 @@ class _SignUpPageState extends State<SignUpPage> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: <Widget>[
+                const Icon(
+                  Icons.restaurant_menu, // Ícone de chapéu de chef (ou similar)
+                  size: 60,
+                  // color: Theme.of(context).primaryColor, // Opcional: usar cor do tema
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  'Recipe Cloud',
+                  style: Theme.of(context).textTheme.headlineSmall,
+                ),
+                const SizedBox(height: 8),
+                Text('Sign Up', style: Theme.of(context).textTheme.titleLarge),
+                const SizedBox(height: 32), // Espaço antes do formulário
                 TextFormField(
                   controller: _emailController,
-                  decoration: const InputDecoration(labelText: 'Email'),
+                  decoration: InputDecoration(
+                    labelText: 'Email',
+                    hintText: 'Enter your email address',
+                    hintStyle: TextStyle(
+                      fontSize: 13.0,
+                      color: Theme.of(context).hintColor,
+                    ),
+                  ),
                   validator: (value) =>
                       value == null || value.isEmpty ? 'Enter email' : null,
                   keyboardType: TextInputType.emailAddress,
                 ),
                 TextFormField(
                   controller: _passwordController,
-                  decoration: const InputDecoration(labelText: 'Password'),
+                  decoration: InputDecoration(
+                    labelText: 'Password',
+                    hintText: 'Min. 8 chars, 1 uppercase, 1 special char.',
+                    hintStyle: TextStyle(
+                      fontSize: 13.0, // Smaller font size
+                      color: Theme.of(
+                        context,
+                      ).hintColor, // Same color as the unfocused label
+                    ),
+                  ),
                   obscureText: true,
-                  validator: (value) =>
-                      value == null || value.isEmpty ? 'Enter password' : null,
+                  validator: _validatePassword,
                 ),
                 const SizedBox(height: 20),
                 if (_isLoading)
