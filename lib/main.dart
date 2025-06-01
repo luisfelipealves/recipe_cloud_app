@@ -1,63 +1,44 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-// Para debugPrint
+import 'package:flutter/foundation.dart'; // Para debugPrint
 
 Future<void> main() async {
-  WidgetsFlutterBinding.ensureInitialized();
+  WidgetsFlutterBinding.ensureInitialized(); // Essencial antes de operações async
 
   try {
-    // Carrega as variáveis de ambiente do arquivo .env
     await dotenv.load(fileName: ".env");
   } catch (e) {
-    debugPrint(
-      'AVISO: Não foi possível carregar o arquivo .env: $e. As variáveis de ambiente podem não estar disponíveis.',
-    );
-    // Dependendo da criticidade, você pode querer parar a execução aqui.
-    // Por exemplo: throw Exception('Falha ao carregar configuração crítica do .env');
+    debugPrint('AVISO: Não foi possível carregar o arquivo .env: $e.');
+    // Considere o que fazer se o .env não carregar.
+    // Para este exemplo, o app pode não funcionar corretamente sem as chaves.
   }
 
-  final String? supabaseUrl = dotenv.env['SUPABASE_URL'];
-  final String? supabaseAnonKey = dotenv.env['SUPABASE_ANON_KEY'];
+  final supabaseUrl = dotenv.env['SUPABASE_URL'];
+  final supabaseAnonKey = dotenv.env['SUPABASE_ANON_KEY'];
 
-  if (supabaseUrl == null || supabaseUrl.isEmpty) {
+  if (supabaseUrl == null ||
+      supabaseUrl.isEmpty ||
+      supabaseAnonKey == null ||
+      supabaseAnonKey.isEmpty) {
     debugPrint(
-      'ERRO CRÍTICO: SUPABASE_URL não está definida no arquivo .env ou está vazia.',
+      'ERRO CRÍTICO: SUPABASE_URL ou SUPABASE_ANON_KEY não encontradas no .env ou estão vazias.',
     );
     // Impedir a execução do app se a configuração crítica estiver faltando.
-    return; // Ou lance uma exceção para interromper o app
+    // Você pode querer exibir uma tela de erro ou simplesmente retornar.
+    return;
   }
 
-  if (supabaseAnonKey == null || supabaseAnonKey.isEmpty) {
-    debugPrint(
-      'ERRO CRÍTICO: SUPABASE_ANON_KEY não está definida no arquivo .env ou está vazia.',
-    );
-    return; // Ou lance uma exceção
-  }
-
-  try {
-    await Supabase.initialize(url: supabaseUrl, anonKey: supabaseAnonKey);
-  } catch (e) {
-    debugPrint('Erro ao inicializar o Supabase: $e');
-    // Impedir a execução do app se o Supabase não puder ser inicializado.
-    return; // Ou lance uma exceção
-  }
-
+  await Supabase.initialize(url: supabaseUrl, anonKey: supabaseAnonKey);
   runApp(const MyApp());
 }
-
-// Exemplo de como acessar o cliente Supabase em outros lugares
-final supabase = Supabase.instance.client;
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
-      title: 'Flutter Supabase App',
-      home: HomePage(), // Pode ser const se HomePage for const
-    );
+    return const MaterialApp(title: 'Recipe Cloud', home: HomePage());
   }
 }
 
@@ -69,46 +50,48 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  // Exemplo de como buscar dados
-  Future<void> _fetchData() async {
-    try {
-      // Para supabase_flutter v2.x+, .select() retorna diretamente os dados ou lança uma exceção.
-      // O .execute() não é mais usado aqui.
-      final List<Map<String, dynamic>> data = await supabase
-          .from('recipes')
-          .select();
+  // É melhor inicializar o Future dentro de initState ou didChangeDependencies
+  // se ele depender de algo que pode mudar, ou se for uma operação custosa.
+  // Para uma simples chamada `select()`, pode ser ok aqui, mas para consistência:
+  late final Future<List<Map<String, dynamic>>> _future;
 
-      // Se a linha acima for bem-sucedida, 'data' conterá sua lista de mapas.
-      // É uma boa prática verificar se o widget ainda está montado
-      // antes de interagir com o estado ou o BuildContext.
-      if (mounted) {
-        debugPrint('Dados recebidos: $data');
-        // Faça algo com os dados, ex: setState(() { _myData = data; });
-      }
-    } on PostgrestException catch (error) {
-      // Trata erros específicos do Supabase (ex: RLS, tabela não encontrada)
-      if (mounted) {
-        debugPrint('Erro do Supabase ao buscar dados: ${error.message}');
-        // Exiba uma mensagem de erro para o usuário, ex: ScaffoldMessenger
-      }
-    } catch (e) {
-      // Trata outros tipos de exceções (ex: problemas de rede)
-      if (mounted) {
-        debugPrint('Exceção genérica ao buscar dados: $e');
-        // Exiba uma mensagem de erro para o usuário
-      }
-    }
+  @override
+  void initState() {
+    super.initState();
+    _future = Supabase.instance.client.from('recipes').select();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Flutter com Supabase')),
-      body: Center(
-        child: ElevatedButton(
-          onPressed: _fetchData,
-          child: const Text('Buscar Dados da Tabela "sua_tabela"'),
-        ),
+      appBar: AppBar(title: const Text('Receitas')),
+      body: FutureBuilder(
+        future: _future,
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
+          if (snapshot.hasError) {
+            return Center(child: Text('Erro: ${snapshot.error}'));
+          }
+          if (!snapshot.hasData || snapshot.data!.isEmpty) {
+            return const Center(child: Text('Nenhuma receita encontrada.'));
+          }
+
+          final recipes = snapshot.data!;
+          return ListView.builder(
+            itemCount: recipes.length,
+            itemBuilder: ((context, index) {
+              // final recipe = recipes[index]; // Você usaria isso para exibir dados da receita
+              return const ListTile(
+                title: Text(
+                  'Funcionou!',
+                  style: TextStyle(color: Colors.black),
+                ),
+              );
+            }),
+          );
+        },
       ),
     );
   }
