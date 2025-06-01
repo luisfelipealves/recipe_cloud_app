@@ -39,6 +39,20 @@ class _SignUpPageState extends State<SignUpPage> {
     }
   }
 
+  String? _validateEmail(String? value) {
+    if (value == null || value.isEmpty) {
+      return 'Enter email';
+    }
+    // Basic email regex: checks for something@something.something
+    final emailRegex = RegExp(
+      r"^[a-zA-Z0-9.a-zA-Z0-9.!#$%&'*+-/=?^_`{|}~]+@[a-zA-Z0-9]+\.[a-zA-Z]+",
+    );
+    if (!emailRegex.hasMatch(value)) {
+      return 'Enter a valid email address';
+    }
+    return null;
+  }
+
   String? _validatePassword(String? value) {
     if (value == null || value.isEmpty) {
       return 'Enter password';
@@ -72,9 +86,19 @@ class _SignUpPageState extends State<SignUpPage> {
 
         if (mounted) {
           if (signUpMessage != null) {
-            ScaffoldMessenger.of(
+            // Aguarda o SnackBar ser dispensado
+            await ScaffoldMessenger.of(
               context,
-            ).showSnackBar(SnackBar(content: Text(signUpMessage)));
+            ).showSnackBar(SnackBar(content: Text(signUpMessage))).closed;
+
+            // Se a mensagem indicar confirmação de e-mail, navega para o login
+            if (mounted && // Verifica se o widget ainda está montado após o await
+                (signUpMessage.toLowerCase().contains('check your email') ||
+                    signUpMessage.toLowerCase().contains(
+                      'confirm your account',
+                    ))) {
+              widget.onNavigateToLogin();
+            }
           } else if (widget.authService.currentUser != null) {
             widget.onSignedIn();
           }
@@ -130,8 +154,7 @@ class _SignUpPageState extends State<SignUpPage> {
                       color: Theme.of(context).hintColor,
                     ),
                   ),
-                  validator: (value) =>
-                      value == null || value.isEmpty ? 'Enter email' : null,
+                  validator: _validateEmail,
                   keyboardType: TextInputType.emailAddress,
                 ),
                 TextFormField(
