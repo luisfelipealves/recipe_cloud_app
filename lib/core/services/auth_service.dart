@@ -83,6 +83,9 @@ class AuthService {
       return 'This email is already registered. Please try logging in.';
     } else if (e.message.toLowerCase().contains('email rate limit exceeded')) {
       return 'Too many attempts. Please try again later.';
+    } else if (e.message.toLowerCase().contains('email not confirmed')) {
+      // Example check
+      return 'Please verify your email before logging in. Check your inbox for a confirmation link.';
     }
     // Fallback for other Supabase specific errors or generic ones
     return e
