@@ -9,16 +9,13 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Cria a instância do RecipeService aqui ou usa um Service Locator/DI
     final recipeService = RecipeService(Supabase.instance.client);
 
     return MaterialApp(
-      title: 'Recipe Cloud', // O título do seu app
-      theme: AppTheme.lightTheme, // Define o tema claro como padrão
-      darkTheme: AppTheme.darkTheme, // Define o tema escuro
-      themeMode:
-          ThemeMode.system, // Opcional: usa o tema do sistema (light/dark)
-      // ou ThemeMode.light / ThemeMode.dark para forçar um tema
+      title: 'Recipe Cloud',
+      theme: AppTheme.lightTheme,
+      darkTheme: AppTheme.darkTheme,
+      themeMode: ThemeMode.system,
       home: HomePage(recipeService: recipeService),
     );
   }

@@ -43,7 +43,6 @@ class _HomePageState extends State<HomePage> {
             itemCount: recipes.length,
             itemBuilder: ((context, index) {
               final recipe = recipes[index];
-              // Exemplo: Exibindo o nome da receita. Adapte conforme sua estrutura de dados.
               return ListTile(
                 title: Text(recipe['name'] ?? 'Receita sem nome'),
               );

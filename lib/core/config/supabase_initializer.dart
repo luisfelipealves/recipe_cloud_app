@@ -8,7 +8,6 @@ class SupabaseInitializer {
       await dotenv.load(fileName: ".env");
     } catch (e) {
       debugPrint('AVISO: Não foi possível carregar o arquivo .env: $e.');
-      // Dependendo da criticidade, você pode querer retornar false aqui
     }
 
     final supabaseUrl = dotenv.env['SUPABASE_URL'];
@@ -21,7 +20,7 @@ class SupabaseInitializer {
       debugPrint(
         'ERRO CRÍTICO: SUPABASE_URL ou SUPABASE_ANON_KEY não encontradas no .env ou estão vazias.',
       );
-      return false; // Indica falha na inicialização
+      return false;
     }
 
     await Supabase.initialize(url: supabaseUrl, anonKey: supabaseAnonKey);
