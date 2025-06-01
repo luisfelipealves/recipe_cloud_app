@@ -11,6 +11,8 @@ class AppTheme {
   static const Color _darkScaffoldBackgroundColor = Color(0xFF121212);
   static const Color _darkCardColor = Color(0xFF1E1E1E);
 
+  static const Color _buttonGreenColor = Color(0xFF81C784);
+
   static final ThemeData lightTheme = ThemeData(
     brightness: Brightness.light,
     primaryColor: _primaryColor,
@@ -40,6 +42,12 @@ class AppTheme {
       bodyMedium: TextStyle(color: Colors.black87),
       titleLarge: TextStyle(color: Colors.black),
     ),
+    elevatedButtonTheme: ElevatedButtonThemeData(
+      style: ElevatedButton.styleFrom(
+        backgroundColor: _buttonGreenColor,
+        foregroundColor: Colors.black,
+      ),
+    ),
   );
 
   static final ThemeData darkTheme = ThemeData(
@@ -60,6 +68,12 @@ class AppTheme {
       surface: _darkCardColor,
       background: _darkScaffoldBackgroundColor,
       error: Colors.redAccent,
+    ),
+    elevatedButtonTheme: ElevatedButtonThemeData(
+      style: ElevatedButton.styleFrom(
+        backgroundColor: _buttonGreenColor,
+        foregroundColor: Colors.white,
+      ),
     ),
   );
 }

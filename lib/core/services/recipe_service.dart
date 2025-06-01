@@ -11,11 +11,11 @@ class RecipeService {
       final data = await _client.from('recipes').select();
       return data;
     } on PostgrestException catch (error) {
-      debugPrint('Erro do Supabase ao buscar receitas: ${error.message}');
-      throw Exception('Falha ao buscar receitas: ${error.message}');
+      debugPrint('Supabase error fetching recipes: ${error.message}');
+      throw Exception('Failed to fetch recipes: ${error.message}');
     } catch (e) {
-      debugPrint('Exceção genérica ao buscar receitas: $e');
-      throw Exception('Ocorreu um erro inesperado: $e');
+      debugPrint('Generic exception fetching recipes: $e');
+      throw Exception('An unexpected error occurred: $e');
     }
   }
 }

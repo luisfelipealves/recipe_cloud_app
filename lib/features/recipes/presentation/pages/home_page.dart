@@ -22,7 +22,16 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Receitas')),
+      appBar: AppBar(
+        title: const Row(
+          mainAxisSize: MainAxisSize.min, // To keep the Row compact
+          children: <Widget>[
+            Icon(Icons.menu_book), // Open book icon
+            SizedBox(width: 8), // Spacing between icon and text
+            Text('Cloud Recipes'),
+          ],
+        ),
+      ),
       body: FutureBuilder<List<Map<String, dynamic>>>(
         future: _futureRecipes,
         builder: (context, snapshot) {
@@ -31,11 +40,11 @@ class _HomePageState extends State<HomePage> {
           }
           if (snapshot.hasError) {
             return Center(
-              child: Text('Erro ao carregar receitas: ${snapshot.error}'),
+              child: Text('Error loading recipes: ${snapshot.error}'),
             );
           }
           if (!snapshot.hasData || snapshot.data!.isEmpty) {
-            return const Center(child: Text('Nenhuma receita encontrada.'));
+            return const Center(child: Text('No recipes found.'));
           }
 
           final recipes = snapshot.data!;
@@ -43,9 +52,7 @@ class _HomePageState extends State<HomePage> {
             itemCount: recipes.length,
             itemBuilder: ((context, index) {
               final recipe = recipes[index];
-              return ListTile(
-                title: Text(recipe['name'] ?? 'Receita sem nome'),
-              );
+              return ListTile(title: Text(recipe['name'] ?? 'Untitled Recipe'));
             }),
           );
         },
