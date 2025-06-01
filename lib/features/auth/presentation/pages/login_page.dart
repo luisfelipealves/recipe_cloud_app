@@ -68,28 +68,6 @@ class _LoginPageState extends State<LoginPage> {
     }
   }
 
-  Future<void> _signInWithGoogle() async {
-    setState(() {
-      _isLoading = true;
-      _errorMessage = null;
-    });
-    try {
-      await widget.authService.signInWithGoogle();
-    } catch (e) {
-      if (mounted) {
-        setState(() {
-          _errorMessage = e.toString().replaceFirst('Exception: ', '');
-        });
-      }
-    } finally {
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
-      }
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -152,18 +130,6 @@ class _LoginPageState extends State<LoginPage> {
                 TextButton(
                   onPressed: widget.onNavigateToSignUp,
                   child: const Text('Don\'t have an account? Sign Up'),
-                ),
-                const SizedBox(height: 10),
-                const Text("OR"),
-                const SizedBox(height: 10),
-                ElevatedButton.icon(
-                  icon: const Icon(Icons.login),
-                  label: const Text('Sign in with Google'),
-                  onPressed: _isLoading ? null : _signInWithGoogle,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.white70,
-                    foregroundColor: Colors.black,
-                  ),
                 ),
               ],
             ),

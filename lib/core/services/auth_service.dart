@@ -62,16 +62,4 @@ class AuthService {
   Future<void> signOut() async {
     await _client.auth.signOut();
   }
-
-  Future<void> signInWithGoogle() async {
-    try {
-      await _client.auth.signInWithOAuth(OAuthProvider.google);
-    } on AuthException catch (e) {
-      debugPrint('Supabase AuthException on Google sign in: ${e.message}');
-      throw Exception(AuthExceptionHandler.handleException(e));
-    } catch (e) {
-      debugPrint('Generic exception on Google sign in: $e');
-      throw Exception(AuthExceptionHandler.handleException(e));
-    }
-  }
 }
