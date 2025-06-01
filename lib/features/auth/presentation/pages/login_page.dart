@@ -24,6 +24,21 @@ class _LoginPageState extends State<LoginPage> {
   bool _isLoading = false;
   String? _errorMessage;
 
+  @override
+  void initState() {
+    super.initState();
+    _emailController.addListener(_clearErrorMessage);
+    _passwordController.addListener(_clearErrorMessage);
+  }
+
+  void _clearErrorMessage() {
+    if (_errorMessage != null && mounted) {
+      setState(() {
+        _errorMessage = null;
+      });
+    }
+  }
+
   Future<void> _signIn() async {
     if (_formKey.currentState!.validate()) {
       setState(() {
@@ -38,7 +53,10 @@ class _LoginPageState extends State<LoginPage> {
         widget.onSignedIn();
       } catch (e) {
         setState(() {
-          _errorMessage = e.toString();
+          _errorMessage = e.toString().replaceFirst(
+            'Exception: ',
+            '',
+          ); // Clean up "Exception: " prefix
         });
       } finally {
         if (mounted) {
@@ -46,6 +64,28 @@ class _LoginPageState extends State<LoginPage> {
             _isLoading = false;
           });
         }
+      }
+    }
+  }
+
+  Future<void> _signInWithGoogle() async {
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+    try {
+      await widget.authService.signInWithGoogle();
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _errorMessage = e.toString().replaceFirst('Exception: ', '');
+        });
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
       }
     }
   }
@@ -58,38 +98,61 @@ class _LoginPageState extends State<LoginPage> {
         padding: const EdgeInsets.all(16.0),
         child: Form(
           key: _formKey,
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: <Widget>[
-              TextFormField(
-                controller: _emailController,
-                decoration: const InputDecoration(labelText: 'Email'),
-                validator: (value) => value!.isEmpty ? 'Enter email' : null,
-              ),
-              TextFormField(
-                controller: _passwordController,
-                decoration: const InputDecoration(labelText: 'Password'),
-                obscureText: true,
-                validator: (value) => value!.isEmpty ? 'Enter password' : null,
-              ),
-              const SizedBox(height: 20),
-              if (_isLoading)
-                const CircularProgressIndicator()
-              else
-                ElevatedButton(onPressed: _signIn, child: const Text('Login')),
-              if (_errorMessage != null)
-                Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: Text(
-                    _errorMessage!,
-                    style: const TextStyle(color: Colors.red),
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: <Widget>[
+                TextFormField(
+                  controller: _emailController,
+                  decoration: const InputDecoration(labelText: 'Email'),
+                  validator: (value) =>
+                      value == null || value.isEmpty ? 'Enter email' : null,
+                  keyboardType: TextInputType.emailAddress,
+                ),
+                TextFormField(
+                  controller: _passwordController,
+                  decoration: const InputDecoration(labelText: 'Password'),
+                  obscureText: true,
+                  validator: (value) =>
+                      value == null || value.isEmpty ? 'Enter password' : null,
+                ),
+                const SizedBox(height: 20),
+                if (_isLoading)
+                  const CircularProgressIndicator()
+                else
+                  ElevatedButton(
+                    onPressed: _signIn,
+                    child: const Text('Login'),
+                  ),
+                if (_errorMessage != null)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 16.0),
+                    child: Text(
+                      _errorMessage!,
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.error,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                TextButton(
+                  onPressed: widget.onNavigateToSignUp,
+                  child: const Text('Don\'t have an account? Sign Up'),
+                ),
+                const SizedBox(height: 10),
+                const Text("OR"),
+                const SizedBox(height: 10),
+                ElevatedButton.icon(
+                  icon: const Icon(Icons.login),
+                  label: const Text('Sign in with Google'),
+                  onPressed: _isLoading ? null : _signInWithGoogle,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.white70,
+                    foregroundColor: Colors.black,
                   ),
                 ),
-              TextButton(
-                onPressed: widget.onNavigateToSignUp,
-                child: const Text('Don\'t have an account? Sign Up'),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
@@ -98,6 +161,8 @@ class _LoginPageState extends State<LoginPage> {
 
   @override
   void dispose() {
+    _emailController.removeListener(_clearErrorMessage);
+    _passwordController.removeListener(_clearErrorMessage);
     _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
