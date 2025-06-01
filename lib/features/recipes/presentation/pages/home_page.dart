@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:recipe_cloud_app/core/services/auth_service.dart';
 import 'package:recipe_cloud_app/core/services/recipe_service.dart';
+import 'package:recipe_cloud_app/features/recipes/presentation/viewmodels/home_viewmodel.dart';
 
+// Assuming RecipeService and AuthService are provided via DI or constructor
 class HomePage extends StatefulWidget {
   final RecipeService recipeService;
   final AuthService authService;
@@ -17,16 +19,27 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  late final Future<List<Map<String, dynamic>>> _futureRecipes;
+  late final HomeViewModel _viewModel;
 
   @override
   void initState() {
     super.initState();
-    _futureRecipes = widget.recipeService.fetchRecipes();
+    // In a real app with DI, ViewModel would be obtained from context.
+    _viewModel = HomeViewModel(widget.recipeService, widget.authService);
+    _viewModel.addListener(_onViewModelChanged);
+    _viewModel.fetchRecipes();
+  }
+
+  void _onViewModelChanged() {
+    // Rebuild the widget if state changes
+    if (mounted) {
+      setState(() {});
+    }
   }
 
   @override
   Widget build(BuildContext context) {
+    // final viewModel = Provider.of<HomeViewModel>(context); // Example with Provider
     return Scaffold(
       appBar: AppBar(
         elevation: 0, // Remove a sombra
@@ -48,35 +61,43 @@ class _HomePageState extends State<HomePage> {
         actions: [
           IconButton(
             icon: const Icon(Icons.logout),
-            onPressed: () async => await widget.authService.signOut(),
+            onPressed: () async => await _viewModel.signOut(),
           ),
         ],
       ),
-      body: FutureBuilder<List<Map<String, dynamic>>>(
-        future: _futureRecipes,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          }
-          if (snapshot.hasError) {
-            return Center(
-              child: Text('Error loading recipes: ${snapshot.error}'),
-            );
-          }
-          if (!snapshot.hasData || snapshot.data!.isEmpty) {
-            return const Center(child: Text('No recipes found.'));
-          }
-
-          final recipes = snapshot.data!;
-          return ListView.builder(
-            itemCount: recipes.length,
-            itemBuilder: ((context, index) {
-              final recipe = recipes[index];
-              return ListTile(title: Text(recipe['name'] ?? 'Untitled Recipe'));
-            }),
-          );
-        },
-      ),
+      body: _buildBody(context),
     );
+  }
+
+  Widget _buildBody(BuildContext context) {
+    switch (_viewModel.state) {
+      case HomeState.loading:
+      case HomeState.initial:
+        return const Center(child: CircularProgressIndicator());
+      case HomeState.error:
+        return Center(
+          child: Text(_viewModel.errorMessage ?? 'An unknown error occurred.'),
+        );
+      case HomeState.loaded:
+        if (_viewModel.recipes.isEmpty) {
+          return const Center(child: Text('No recipes found.'));
+        }
+        final recipes = _viewModel.recipes;
+        return ListView.builder(
+          itemCount: recipes.length,
+          itemBuilder: ((context, index) {
+            final recipe = recipes[index];
+            return ListTile(title: Text(recipe['name'] ?? 'Untitled Recipe'));
+          }),
+        );
+    }
+  }
+
+  @override
+  void dispose() {
+    _viewModel.removeListener(_onViewModelChanged);
+    // If ViewModel had any resources to dispose, call them here.
+    // _viewModel.dispose(); // If you add a dispose method to ViewModel
+    super.dispose();
   }
 }

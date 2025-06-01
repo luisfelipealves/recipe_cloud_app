@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:recipe_cloud_app/core/services/auth_service.dart';
+import 'package:recipe_cloud_app/features/auth/presentation/viewmodels/login_viewmodel.dart';
+import 'package:supabase_flutter/supabase_flutter.dart'; // For SupabaseClient, if needed for DI
 
 class LoginPage extends StatefulWidget {
   final AuthService authService;
@@ -19,51 +21,43 @@ class LoginPage extends StatefulWidget {
 
 class _LoginPageState extends State<LoginPage> {
   final _formKey = GlobalKey<FormState>();
-  final _emailController = TextEditingController();
-  final _passwordController = TextEditingController();
-  bool _isLoading = false;
-  String? _errorMessage;
+  late final TextEditingController _emailController;
+  late final TextEditingController _passwordController;
+  late final LoginViewModel _viewModel;
 
   @override
   void initState() {
     super.initState();
-    _emailController.addListener(_clearErrorMessage);
-    _passwordController.addListener(_clearErrorMessage);
+    // In a real app with DI (e.g., Provider), ViewModel would be obtained from context.
+    // For this example, we instantiate it directly.
+    // Ensure Supabase.instance.client is initialized before this page is built.
+    _viewModel = LoginViewModel(
+      widget.authService,
+    ); // AuthService implements IAuthService
+    _emailController = TextEditingController();
+    _passwordController = TextEditingController();
+
+    _emailController.addListener(_viewModel.clearErrorMessage);
+    _passwordController.addListener(_viewModel.clearErrorMessage);
+
+    _viewModel.addListener(_onViewModelChanged);
   }
 
-  void _clearErrorMessage() {
-    if (_errorMessage != null && mounted) {
-      setState(() {
-        _errorMessage = null;
-      });
+  void _onViewModelChanged() {
+    // Rebuild the widget if isLoading or errorMessage changes
+    if (mounted) {
+      setState(() {});
     }
   }
 
   Future<void> _signIn() async {
     if (_formKey.currentState!.validate()) {
-      setState(() {
-        _isLoading = true;
-        _errorMessage = null;
-      });
-      try {
-        await widget.authService.signInWithPassword(
-          email: _emailController.text.trim(),
-          password: _passwordController.text.trim(),
-        );
+      final success = await _viewModel.signIn(
+        _emailController.text.trim(),
+        _passwordController.text.trim(),
+      );
+      if (success && mounted) {
         widget.onSignedIn();
-      } catch (e) {
-        setState(() {
-          _errorMessage = e.toString().replaceFirst(
-            'Exception: ',
-            '',
-          ); // Clean up "Exception: " prefix
-        });
-      } finally {
-        if (mounted) {
-          setState(() {
-            _isLoading = false;
-          });
-        }
       }
     }
   }
@@ -168,14 +162,16 @@ class _LoginPageState extends State<LoginPage> {
                             : null,
                       ),
                       const SizedBox(height: 30),
-                      if (_isLoading)
+                      if (_viewModel.isLoading)
                         const Center(child: CircularProgressIndicator())
                       else
                         ElevatedButton(
                           style: ElevatedButton.styleFrom(
                             padding: const EdgeInsets.symmetric(vertical: 16.0),
                             shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12.0),
+                              borderRadius: BorderRadius.circular(
+                                12.0,
+                              ), // Example: Use a brand color
                             ),
                             textStyle: const TextStyle(
                               fontSize: 16,
@@ -187,14 +183,14 @@ class _LoginPageState extends State<LoginPage> {
                           onPressed: _signIn,
                           child: const Text('Login'),
                         ),
-                      if (_errorMessage != null)
+                      if (_viewModel.errorMessage != null)
                         Padding(
                           padding: const EdgeInsets.only(
                             top: 20.0,
                             bottom: 10.0,
                           ),
                           child: Text(
-                            _errorMessage!,
+                            _viewModel.errorMessage!,
                             style: TextStyle(
                               color: Theme.of(context).colorScheme.error,
                               fontSize: 14,
@@ -238,8 +234,9 @@ class _LoginPageState extends State<LoginPage> {
 
   @override
   void dispose() {
-    _emailController.removeListener(_clearErrorMessage);
-    _passwordController.removeListener(_clearErrorMessage);
+    _viewModel.removeListener(_onViewModelChanged);
+    _emailController.removeListener(_viewModel.clearErrorMessage);
+    _passwordController.removeListener(_viewModel.clearErrorMessage);
     _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
