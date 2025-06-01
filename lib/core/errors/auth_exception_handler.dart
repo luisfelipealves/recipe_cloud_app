@@ -1,12 +1,18 @@
+import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class AuthExceptionHandler {
   static String handleException(dynamic e, {bool isSignUp = false}) {
+    // Log the original exception for debugging purposes in development mode
+    if (kDebugMode) {
+      debugPrint('AuthException caught: $e');
+      if (e is Error) {
+        debugPrint('Stack trace: ${e.stackTrace}');
+      }
+    }
+
     if (e is AuthException) {
       return _mapAuthExceptionMessage(e, isSignUp: isSignUp);
-    } else if (e is Exception) {
-      // For other general exceptions caught by the AuthService
-      return e.toString().replaceFirst('Exception: ', '');
     }
     return 'An unexpected error occurred. Please try again.';
   }

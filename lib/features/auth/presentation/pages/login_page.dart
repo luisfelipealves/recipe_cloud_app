@@ -68,6 +68,20 @@ class _LoginPageState extends State<LoginPage> {
     }
   }
 
+  String? _validateEmail(String? value) {
+    if (value == null || value.isEmpty) {
+      return 'Enter email';
+    }
+    // Basic email regex: checks for something@something.something
+    final emailRegex = RegExp(
+      r"^[a-zA-Z0-9.a-zA-Z0-9.!#$%&'*+-/=?^_`{|}~]+@[a-zA-Z0-9]+\.[a-zA-Z]+",
+    );
+    if (!emailRegex.hasMatch(value)) {
+      return 'Enter a valid email address';
+    }
+    return null;
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -96,8 +110,7 @@ class _LoginPageState extends State<LoginPage> {
                 TextFormField(
                   controller: _emailController,
                   decoration: const InputDecoration(labelText: 'Email'),
-                  validator: (value) =>
-                      value == null || value.isEmpty ? 'Enter email' : null,
+                  validator: _validateEmail,
                   keyboardType: TextInputType.emailAddress,
                 ),
                 TextFormField(
