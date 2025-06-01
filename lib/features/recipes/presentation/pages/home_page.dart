@@ -37,6 +37,12 @@ class _HomePageState extends State<HomePage> {
             Text('Cloud Recipes'),
           ],
         ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.logout),
+            onPressed: () async => await widget.authService.signOut(),
+          ),
+        ],
       ),
       body: FutureBuilder<List<Map<String, dynamic>>>(
         future: _futureRecipes,
