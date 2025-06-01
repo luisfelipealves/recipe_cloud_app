@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:recipe_cloud_app/core/services/auth_service.dart';
 import 'package:recipe_cloud_app/features/auth/presentation/viewmodels/login_viewmodel.dart';
-import 'package:supabase_flutter/supabase_flutter.dart'; // For SupabaseClient, if needed for DI
 
 class LoginPage extends StatefulWidget {
   final AuthService authService;
