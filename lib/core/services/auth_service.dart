@@ -1,18 +1,22 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:recipe_cloud_app/core/errors/auth_exception_handler.dart';
+import 'package:recipe_cloud_app/core/services/i_auth_service.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-class AuthService {
+class AuthService implements IAuthService {
   final SupabaseClient _client;
 
   AuthService(this._client);
 
+  @override
   Stream<AuthState> get authStateChanges => _client.auth.onAuthStateChange;
 
+  @override
   User? get currentUser => _client.auth.currentUser;
 
   // Consider returning a custom result object or enum for more complex scenarios
+  @override
   Future<String?> signUp({
     required String email,
     required String password,
@@ -47,6 +51,7 @@ class AuthService {
     }
   }
 
+  @override
   Future<void> signInWithPassword({
     required String email,
     required String password,
@@ -59,6 +64,7 @@ class AuthService {
     }
   }
 
+  @override
   Future<void> signOut() async {
     await _client.auth.signOut();
   }

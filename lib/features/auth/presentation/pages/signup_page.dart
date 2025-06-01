@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:recipe_cloud_app/core/services/auth_service.dart';
+import 'package:recipe_cloud_app/features/auth/presentation/viewmodels/signup_viewmodel.dart';
 
 class SignUpPage extends StatefulWidget {
   final AuthService authService;
@@ -19,23 +20,30 @@ class SignUpPage extends StatefulWidget {
 
 class _SignUpPageState extends State<SignUpPage> {
   final _formKey = GlobalKey<FormState>();
-  final _emailController = TextEditingController();
-  final _passwordController = TextEditingController();
-  bool _isLoading = false;
-  String? _errorMessage;
+  late final TextEditingController _emailController;
+  late final TextEditingController _passwordController;
+  late final SignUpViewModel _viewModel;
 
   @override
   void initState() {
     super.initState();
-    _emailController.addListener(_clearErrorMessage);
-    _passwordController.addListener(_clearErrorMessage);
+    // In a real app with DI, ViewModel would be obtained from context.
+    _viewModel = SignUpViewModel(
+      widget.authService,
+    ); // AuthService implements IAuthService
+    _emailController = TextEditingController();
+    _passwordController = TextEditingController();
+
+    _emailController.addListener(_viewModel.clearMessages);
+    _passwordController.addListener(_viewModel.clearMessages);
+
+    _viewModel.addListener(_onViewModelChanged);
   }
 
-  void _clearErrorMessage() {
-    if (_errorMessage != null && mounted) {
-      setState(() {
-        _errorMessage = null;
-      });
+  void _onViewModelChanged() {
+    // Rebuild the widget if isLoading or messages change
+    if (mounted) {
+      setState(() {});
     }
   }
 
@@ -74,46 +82,31 @@ class _SignUpPageState extends State<SignUpPage> {
 
   Future<void> _signUp() async {
     if (_formKey.currentState!.validate()) {
-      setState(() {
-        _isLoading = true;
-        _errorMessage = null;
-      });
-      try {
-        final String? signUpMessage = await widget.authService.signUp(
-          email: _emailController.text.trim(),
-          password: _passwordController.text.trim(),
-        );
+      final status = await _viewModel.signUp(
+        _emailController.text.trim(),
+        _passwordController.text.trim(),
+      );
 
-        if (mounted) {
-          if (signUpMessage != null) {
+      if (mounted) {
+        if (_viewModel.successMessage != null) {
+          // This handles the "check your email" message via the ViewModel's successMessage
+          // The SnackBar logic is now slightly different as it's driven by ViewModel state
+          ScaffoldMessenger.of(context)
+              .showSnackBar(SnackBar(content: Text(_viewModel.successMessage!)))
+              .closed
+              .then((_) {
+                if (mounted &&
+                    status == SignUpStatus.emailConfirmationRequired) {
+                  widget.onNavigateToLogin();
+                }
+              });
+        } else if (status == SignUpStatus.success) {
+          // If signUpServiceMessage was null, it means direct success (auto-login)
+          if (widget.authService.currentUser != null) {
+            // Check if user is now available
             // Aguarda o SnackBar ser dispensado
-            await ScaffoldMessenger.of(
-              context,
-            ).showSnackBar(SnackBar(content: Text(signUpMessage))).closed;
-
-            // Se a mensagem indicar confirmação de e-mail, navega para o login
-            if (mounted && // Verifica se o widget ainda está montado após o await
-                (signUpMessage.toLowerCase().contains('check your email') ||
-                    signUpMessage.toLowerCase().contains(
-                      'confirm your account',
-                    ))) {
-              widget.onNavigateToLogin();
-            }
-          } else if (widget.authService.currentUser != null) {
             widget.onSignedIn();
           }
-        }
-      } catch (e) {
-        if (mounted) {
-          setState(() {
-            _errorMessage = e.toString().replaceFirst('Exception: ', '');
-          });
-        }
-      } finally {
-        if (mounted) {
-          setState(() {
-            _isLoading = false;
-          });
         }
       }
     }
@@ -208,7 +201,7 @@ class _SignUpPageState extends State<SignUpPage> {
                         validator: _validatePassword,
                       ),
                       const SizedBox(height: 30),
-                      if (_isLoading)
+                      if (_viewModel.isLoading)
                         const Center(child: CircularProgressIndicator())
                       else
                         ElevatedButton(
@@ -227,14 +220,14 @@ class _SignUpPageState extends State<SignUpPage> {
                           onPressed: _signUp,
                           child: const Text('Sign Up'),
                         ),
-                      if (_errorMessage != null)
+                      if (_viewModel.errorMessage != null)
                         Padding(
                           padding: const EdgeInsets.only(
                             top: 20.0,
                             bottom: 10.0,
                           ),
                           child: Text(
-                            _errorMessage!,
+                            _viewModel.errorMessage!,
                             style: TextStyle(
                               color: Theme.of(context).colorScheme.error,
                               fontSize: 14,
@@ -278,10 +271,11 @@ class _SignUpPageState extends State<SignUpPage> {
 
   @override
   void dispose() {
+    _viewModel.removeListener(_onViewModelChanged);
+    _emailController.removeListener(_viewModel.clearMessages);
+    _passwordController.removeListener(_viewModel.clearMessages);
     _emailController.dispose();
     _passwordController.dispose();
-    _emailController.removeListener(_clearErrorMessage);
-    _passwordController.removeListener(_clearErrorMessage);
     super.dispose();
   }
 }
