@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
+import 'package:recipe_cloud_app/core/errors/auth_exception_handler.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class AuthService {
@@ -39,10 +40,10 @@ class AuthService {
       return null; // Indicates success or auto-login
     } on AuthException catch (e) {
       debugPrint('Supabase AuthException on sign up: ${e.message}');
-      throw Exception(_mapAuthExceptionMessage(e, isSignUp: true));
+      throw Exception(AuthExceptionHandler.handleException(e, isSignUp: true));
     } catch (e) {
       debugPrint('Generic exception on sign up: $e');
-      throw Exception('An unexpected error occurred during sign up.');
+      throw Exception(AuthExceptionHandler.handleException(e));
     }
   }
 
@@ -54,7 +55,7 @@ class AuthService {
       await _client.auth.signInWithPassword(email: email, password: password);
     } on AuthException catch (e) {
       debugPrint('Supabase AuthException on sign in: ${e.message}');
-      throw Exception(_mapAuthExceptionMessage(e));
+      throw Exception(AuthExceptionHandler.handleException(e));
     }
   }
 
@@ -67,28 +68,10 @@ class AuthService {
       await _client.auth.signInWithOAuth(OAuthProvider.google);
     } on AuthException catch (e) {
       debugPrint('Supabase AuthException on Google sign in: ${e.message}');
-      throw Exception('Google Sign-In failed: ${e.message}');
+      throw Exception(AuthExceptionHandler.handleException(e));
     } catch (e) {
       debugPrint('Generic exception on Google sign in: $e');
-      throw Exception('An unexpected error occurred during Google Sign-In.');
+      throw Exception(AuthExceptionHandler.handleException(e));
     }
-  }
-
-  // Helper to provide more user-friendly messages
-  String _mapAuthExceptionMessage(AuthException e, {bool isSignUp = false}) {
-    if (e.message.toLowerCase().contains('invalid login credentials')) {
-      return 'Invalid email or password. Please try again.';
-    } else if (e.message.toLowerCase().contains('user already registered') &&
-        isSignUp) {
-      return 'This email is already registered. Please try logging in.';
-    } else if (e.message.toLowerCase().contains('email rate limit exceeded')) {
-      return 'Too many attempts. Please try again later.';
-    } else if (e.message.toLowerCase().contains('email not confirmed')) {
-      // Example check
-      return 'Please verify your email before logging in. Check your inbox for a confirmation link.';
-    }
-    // Fallback for other Supabase specific errors or generic ones
-    return e
-        .message; // Or a more generic "Authentication failed. Please try again."
   }
 }
